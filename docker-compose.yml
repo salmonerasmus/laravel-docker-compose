@@ -1,0 +1,47 @@
+version: '2'
+
+services:
+
+  web:
+    build: docker/web
+    depends_on:
+      - "db"
+    ports:
+      - "443:443"
+    volumes:
+      - ./:/var/www/web-app
+      - ./docker/web/apache/sites-available:/etc/apache2/sites-available
+    working_dir: /var/www/web-app
+    networks:
+      - api
+
+  db:
+    image: mysql:5.7
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      DB_HOST: "localhost"
+    env_file:
+        - ./.env
+    volumes:
+        - ./docker/db/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    networks:
+      - api
+
+  cache:
+    image: redis
+    networks:
+      - api
+
+  mail:
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - api
+
+networks:
+  api:
+    driver: bridge
